@@ -1,5 +1,3 @@
-using DeliveryScheduler.Repository.Helpers;
-
 namespace DeliveryScheduler.Service.Tests;
 public class SchedulerTests
 {
@@ -295,8 +293,12 @@ public class SchedulerTests
         var postalCode = "1258";
         var products = new List<int> {1, 2, 3, 4, 5};
 
-        if (!productList.NotNullAndAny()) return new OrderRequestParams(postalCode, products);
-        products = productList.ToList();
-        return new OrderRequestParams(postalCode, products);
+        var input = new OrderRequestParams
+        {
+            PostalCode = postalCode,
+            ProductIds = productList.NotNullAndAny() ? productList.ToList() : products
+        };
+
+        return input;
     }
 }

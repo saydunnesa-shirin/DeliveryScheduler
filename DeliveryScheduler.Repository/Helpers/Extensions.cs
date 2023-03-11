@@ -10,6 +10,4 @@ public static class Extensions
     {
         return collection != null && collection.Any();
     }
-
-   
 }

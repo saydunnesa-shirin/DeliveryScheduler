@@ -67,7 +67,6 @@ public class Scheduler : IScheduler
 
                     productDic.Add(product.ProductId, deliverable);
                 }
-
                 
                 if (productDic.Values.All(q => q.Equals(true)))
                 {
@@ -99,11 +98,6 @@ public class Scheduler : IScheduler
             Console.WriteLine(e);
             throw;
         }
-    }
-
-    private IEnumerable<Customer> GetCustomers()
-    {
-        return _customer.GetCustomers();
     }
 
     private IEnumerable<Product> GetProducts()

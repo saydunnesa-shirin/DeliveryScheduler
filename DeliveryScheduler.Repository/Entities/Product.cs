@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace DeliveryScheduler.Repository.Entities;
+﻿namespace DeliveryScheduler.Repository.Entities;
 public class Product
 {
     public int ProductId { get; set; }

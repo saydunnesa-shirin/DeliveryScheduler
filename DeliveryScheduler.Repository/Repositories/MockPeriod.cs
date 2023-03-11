@@ -15,6 +15,6 @@ public class MockPeriod : IPeriod
 
     public DaysOfWeek GetGreenDeliveryDates()
     {
-        return DaysOfWeek.Monday;
+        return DaysOfWeek.Wednesday;
     }
 }
