@@ -46,7 +46,7 @@ public class SchedulerTests
     {
         //Arrange
         var command = SetUpGetAvailableDeliveryDatesRequest();
-        command.Products = null;
+        command.ProductIds = null;
         var newMockProduct = new MockProduct();
         _productRepository.Setup(x => x.GetProducts()).Returns(newMockProduct.GetProducts);
 
@@ -54,7 +54,7 @@ public class SchedulerTests
         var result = _schedulerService.GetAvailableDeliveryDates(command);
 
         //Arrange
-        Assert.AreEqual(result.errMessage, "Invalid product list");
+        Assert.AreEqual(result.errMessage, "Invalid requested product list");
     }
 
     [Test]
@@ -74,7 +74,7 @@ public class SchedulerTests
             }
         };
 
-        var command = SetUpGetAvailableDeliveryDatesRequest(products);
+        var command = SetUpGetAvailableDeliveryDatesRequest(new List<int> { 1, 2 });
 
         var newMockProduct = new MockProduct();
         _productRepository.Setup(x => x.GetProducts()).Returns(products);
@@ -109,7 +109,7 @@ public class SchedulerTests
             }
         };
 
-        var command = SetUpGetAvailableDeliveryDatesRequest(products);
+        var command = SetUpGetAvailableDeliveryDatesRequest(new List<int> { 1, 2 });
         
         var newMockProduct = new MockProduct();
         _productRepository.Setup(x => x.GetProducts()).Returns(products);
@@ -127,48 +127,172 @@ public class SchedulerTests
         Assert.IsEmpty(result.availabilities.Where(a=>a.IsGreenDelivery));
     }
 
-    private static AvailiabilitySearch SetUpGetAvailableDeliveryDatesRequest(IEnumerable<Product> productList = null)
+    [Test]
+    public void GetAvailableDeliveryDates_HasTwoGreenDelivery()
     {
-        var postalCode = "1258";
-        var products = new List<Product>();
-        
-        if (productList.NotNullAndAny())
-        {
-            products = productList.ToList();
-            return new AvailiabilitySearch(postalCode, products);
-        }
+        //Arrange
 
-        products = new List<Product>
+        var products = new List<Product>
         {
             new()
             {
                 ProductId = 1, Name = "LG TV", ProductType = ProductType.Normal, DeliveryDays = new List<DaysOfWeek>
                 {
-                    DaysOfWeek.Wednesday, DaysOfWeek.Thursday, DaysOfWeek.Friday, DaysOfWeek.Saturday, DaysOfWeek.Sunday
+                    DaysOfWeek.Monday, DaysOfWeek.Tuesday, DaysOfWeek.Wednesday, DaysOfWeek.Thursday, DaysOfWeek.Friday, DaysOfWeek.Saturday, DaysOfWeek.Sunday
                 },
-                DaysInAdvance = 4
+                DaysInAdvance = 2
             },
-
             new()
             {
-                ProductId = 2, Name = "AC", ProductType = ProductType.External, DeliveryDays = new List<DaysOfWeek>
+                ProductId = 2, Name = "DELL Laptop", ProductType = ProductType.Normal, DeliveryDays = new List<DaysOfWeek>
                 {
-                    DaysOfWeek.Wednesday, DaysOfWeek.Thursday, DaysOfWeek.Friday, DaysOfWeek.Saturday, DaysOfWeek.Sunday
+                    DaysOfWeek.Monday, DaysOfWeek.Tuesday, DaysOfWeek.Wednesday, DaysOfWeek.Thursday, DaysOfWeek.Friday, DaysOfWeek.Saturday, DaysOfWeek.Sunday
                 },
-                DaysInAdvance = 5
-            },
-
-            new()
-            {
-                ProductId = 3, Name = "Dell Laptop", ProductType = ProductType.External, DeliveryDays =
-                    new List<DaysOfWeek>
-                    {
-                        DaysOfWeek.Wednesday, DaysOfWeek.Thursday, DaysOfWeek.Friday, DaysOfWeek.Saturday,
-                        DaysOfWeek.Sunday
-                    },
-                DaysInAdvance = 5,
+                DaysInAdvance = 1
             }
         };
-        return new AvailiabilitySearch(postalCode, products);
+
+        var command = SetUpGetAvailableDeliveryDatesRequest(new List<int>{1,2});
+
+        var newMockProduct = new MockProduct();
+        _productRepository.Setup(x => x.GetProducts()).Returns(products);
+
+        _periodRepository.Setup(x => x.GetOrderDate()).Returns(new DateTime(2023, 03, 07));
+        _periodRepository.Setup(x => x.GetOrderLength()).Returns(14);
+
+        //Act
+        var result = _schedulerService.GetAvailableDeliveryDates(command);
+
+        //Arrange
+        Assert.IsEmpty(result.errMessage);
+        Assert.IsNotEmpty(result.availabilities);
+        Assert.AreEqual(13, result.availabilities.Count());
+    }
+
+    [Test]
+    public void GetAvailableDeliveryDates_DeliveryDaysNotMatch_Pass()
+    {
+        //Arrange
+
+        var products = new List<Product>
+        {
+            new()
+            {
+                ProductId = 2, Name = "LG TV", ProductType = ProductType.Normal, DeliveryDays = new List<DaysOfWeek>
+                {
+                    DaysOfWeek.Monday, DaysOfWeek.Tuesday, DaysOfWeek.Wednesday
+                },
+                DaysInAdvance = 1
+            }
+        };
+
+        var command = SetUpGetAvailableDeliveryDatesRequest(new List<int> { 2 });
+
+        var newMockProduct = new MockProduct();
+        _productRepository.Setup(x => x.GetProducts()).Returns(products);
+
+        _periodRepository.Setup(x => x.GetOrderDate()).Returns(new DateTime(2023, 03, 09));
+        _periodRepository.Setup(x => x.GetOrderLength()).Returns(4);
+
+        //Act
+        var result = _schedulerService.GetAvailableDeliveryDates(command);
+
+        //Arrange
+        Assert.IsEmpty(result.errMessage);
+        Assert.IsEmpty(result.availabilities);
+    }
+
+    [Test]
+    public void GetAvailableDeliveryDates_CheckForDaysInAdvance()
+    {
+        //Arrange
+
+        var products = new List<Product>
+        {
+            new()
+            {
+                ProductId = 1, Name = "LG TV", ProductType = ProductType.Normal, DeliveryDays = new List<DaysOfWeek>
+                {
+                    DaysOfWeek.Monday, DaysOfWeek.Tuesday, DaysOfWeek.Wednesday
+                },
+                DaysInAdvance = 2
+            },
+            new()
+            {
+                ProductId = 2, Name = "DELL Laptop", ProductType = ProductType.External, DeliveryDays = new List<DaysOfWeek>
+                {
+                    DaysOfWeek.Monday, DaysOfWeek.Tuesday, DaysOfWeek.Wednesday
+                },
+                DaysInAdvance = 5
+            }
+        };
+
+        var command = SetUpGetAvailableDeliveryDatesRequest(new List<int> { 1, 2 });
+
+        var newMockProduct = new MockProduct();
+        _productRepository.Setup(x => x.GetProducts()).Returns(products);
+
+        _periodRepository.Setup(x => x.GetOrderDate()).Returns(new DateTime(2023, 03, 06));
+        _periodRepository.Setup(x => x.GetOrderLength()).Returns(5);
+
+        //Act
+        var result = _schedulerService.GetAvailableDeliveryDates(command);
+
+        //Arrange
+        Assert.IsEmpty(result.errMessage);
+        Assert.IsNotEmpty(result.availabilities);
+        Assert.AreEqual(1, result.availabilities.Count());
+    }
+
+    [Test]
+    public void GetAvailableDeliveryDates_CheckForTemporaryProductDeliverableWeek()
+    {
+        //Arrange
+
+        var products = new List<Product>
+        {
+            new()
+            {
+                ProductId = 1, Name = "LG TV", ProductType = ProductType.Normal, DeliveryDays = new List<DaysOfWeek>
+                {
+                    DaysOfWeek.Monday, DaysOfWeek.Tuesday, DaysOfWeek.Wednesday, DaysOfWeek.Thursday, DaysOfWeek.Friday, DaysOfWeek.Saturday, DaysOfWeek.Sunday
+                },
+                DaysInAdvance = 2
+            },
+            new()
+            {
+                ProductId = 2, Name = "DELL Laptop", ProductType = ProductType.Temporary, DeliveryDays = new List<DaysOfWeek>
+                {
+                    DaysOfWeek.Monday, DaysOfWeek.Tuesday, DaysOfWeek.Wednesday, DaysOfWeek.Thursday, DaysOfWeek.Friday, DaysOfWeek.Saturday, DaysOfWeek.Sunday
+                },
+                DaysInAdvance = 1
+            }
+        };
+
+        var command = SetUpGetAvailableDeliveryDatesRequest(new List<int> { 1, 2 });
+
+        var newMockProduct = new MockProduct();
+        _productRepository.Setup(x => x.GetProducts()).Returns(products);
+
+        _periodRepository.Setup(x => x.GetOrderDate()).Returns(new DateTime(2023, 03, 07));
+        _periodRepository.Setup(x => x.GetOrderLength()).Returns(14);
+
+        //Act
+        var result = _schedulerService.GetAvailableDeliveryDates(command);
+
+        //Arrange
+        Assert.IsEmpty(result.errMessage);
+        Assert.IsNotEmpty(result.availabilities);
+        Assert.AreEqual(6, result.availabilities.Count());
+    }
+
+    private static OrderRequestParams SetUpGetAvailableDeliveryDatesRequest(IEnumerable<int> productList = null)
+    {
+        var postalCode = "1258";
+        var products = new List<int> {1, 2, 3, 4, 5};
+
+        if (!productList.NotNullAndAny()) return new OrderRequestParams(postalCode, products);
+        products = productList.ToList();
+        return new OrderRequestParams(postalCode, products);
     }
 }

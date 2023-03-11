@@ -4,5 +4,5 @@ using DeliveryScheduler.Repository.Requests;
 namespace DeliveryScheduler.Service.Services;
 public interface IScheduler
 {
-    public (IEnumerable<Availability> availabilities, string errMessage) GetAvailableDeliveryDates(AvailiabilitySearch input);
+    public (IEnumerable<Availability> availabilities, string errMessage) GetAvailableDeliveryDates(OrderRequestParams input);
 }
