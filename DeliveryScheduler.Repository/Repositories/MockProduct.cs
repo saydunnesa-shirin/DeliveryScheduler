@@ -8,7 +8,7 @@ public class MockProduct : IProduct
         {
             new() { ProductId = 1, Name = "LG TV", ProductType = ProductType.Normal, DeliveryDays = new List<DaysOfWeek>
             {
-                DaysOfWeek.Wednesday, DaysOfWeek.Thursday, DaysOfWeek.Friday, DaysOfWeek.Saturday, DaysOfWeek.Sunday
+                DaysOfWeek.Monday, DaysOfWeek.Tuesday, DaysOfWeek.Wednesday, DaysOfWeek.Thursday, DaysOfWeek.Friday, DaysOfWeek.Saturday, DaysOfWeek.Sunday
             },DaysInAdvance = GetDaysInAdvance(ProductType.Normal) },
 
             new() { ProductId = 2, Name = "AC", ProductType = ProductType.External, DeliveryDays = new List<DaysOfWeek>

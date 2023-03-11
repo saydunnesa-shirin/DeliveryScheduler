@@ -68,13 +68,16 @@ public class Scheduler : IScheduler
                     productDic.Add(product.ProductId, deliverable);
                 }
 
+                
                 if (productDic.Values.All(q => q.Equals(true)))
                 {
+                    var greenDeliveryDate = _period.GetGreenDeliveryDates();
                     result.Add(new Availability
                     {
                         PostalCode = input.PostalCode,
                         DeliveryDate = orderDate,
-                        IsGreenDelivery = day == (DaysOfWeek)GreenDeliveryDates.Weekly
+                        IsGreenDelivery = day == greenDeliveryDate,
+                        Rank = day == greenDeliveryDate && orderDate < DateTime.Now.AddDays(3) ? 1 : 0
                     });
                 }
                 orderDate = orderDate.AddDays(1);
@@ -86,7 +89,7 @@ public class Scheduler : IScheduler
 
             if (result.Any(o => o.IsGreenDelivery) && result.Any(d => d.DeliveryDate < DateTime.Now.AddDays(3)))
             {
-                result = result.OrderByDescending(o => o.IsGreenDelivery).ToList();
+                result = result.OrderByDescending(o => o.Rank).ToList();
             }
 
             return (result, errorMessage);

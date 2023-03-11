@@ -12,4 +12,9 @@ public class MockPeriod : IPeriod
     {
         return HowManyDays;
     }
+
+    public DaysOfWeek GetGreenDeliveryDates()
+    {
+        return DaysOfWeek.Monday;
+    }
 }

@@ -7,11 +7,6 @@ public enum ProductType
     Temporary
 }
 
-public enum GreenDeliveryDates
-{
-    Weekly = DaysOfWeek.Wednesday
-}
-
 public enum DaysOfWeek
 {
     Monday = 1,

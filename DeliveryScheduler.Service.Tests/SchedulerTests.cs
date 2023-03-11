@@ -81,6 +81,7 @@ public class SchedulerTests
 
         _periodRepository.Setup(x => x.GetOrderDate()).Returns(new DateTime(2023, 03, 10));
         _periodRepository.Setup(x => x.GetOrderLength()).Returns(10);
+        _periodRepository.Setup(x => x.GetGreenDeliveryDates()).Returns(DaysOfWeek.Wednesday);
 
         //Act
         var result = _schedulerService.GetAvailableDeliveryDates(command);
@@ -157,8 +158,9 @@ public class SchedulerTests
         var newMockProduct = new MockProduct();
         _productRepository.Setup(x => x.GetProducts()).Returns(products);
 
-        _periodRepository.Setup(x => x.GetOrderDate()).Returns(new DateTime(2023, 03, 07));
+        _periodRepository.Setup(x => x.GetOrderDate()).Returns(new DateTime(2023, 03, 11));
         _periodRepository.Setup(x => x.GetOrderLength()).Returns(14);
+        _periodRepository.Setup(x => x.GetGreenDeliveryDates()).Returns(DaysOfWeek.Monday);
 
         //Act
         var result = _schedulerService.GetAvailableDeliveryDates(command);
@@ -167,6 +169,8 @@ public class SchedulerTests
         Assert.IsEmpty(result.errMessage);
         Assert.IsNotEmpty(result.availabilities);
         Assert.AreEqual(13, result.availabilities.Count());
+        Assert.AreEqual(2, result.availabilities.Where(d => d.IsGreenDelivery).Count());
+        Assert.AreEqual(true, result.availabilities.First().IsGreenDelivery);
     }
 
     [Test]
