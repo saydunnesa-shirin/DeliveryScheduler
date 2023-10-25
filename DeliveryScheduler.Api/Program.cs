@@ -3,6 +3,12 @@ using DeliveryScheduler.Service.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+//Add CORS
+builder.Services.AddCors();
+
 // Add services to the container.
 builder.Services.AddScoped<ICustomer, MockCustomer>();
 builder.Services.AddScoped<IProduct, MockProduct>();
@@ -16,7 +22,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+//Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -24,6 +30,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+//User CORS
+app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:3000"));
 
 app.UseAuthorization();
 

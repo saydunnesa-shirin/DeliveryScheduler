@@ -18,10 +18,43 @@ public class SchedulerController : ControllerBase
     }
 
     [HttpPost(Name = "GetAvailableDeliveryDates")]
-    public IEnumerable<Availability> GetAvailableDeliveryDates(OrderRequestParams input)
+    public IEnumerable<Availability> GetAvailableDeliveryDates(OrderRequestParams? input = null)
     {
         try
         {
+            input ??= new OrderRequestParams
+                {
+                    PostalCode = "string",
+                    ProductIds = new List<int> { 1 }
+                };
+
+            var result = _scheduler.GetAvailableDeliveryDates(input);
+
+            if (string.IsNullOrEmpty(result.errMessage))
+                return result.availabilities;
+
+            _logger.LogError(result.errMessage);
+            return new List<Availability>();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e.Message);
+        }
+
+        return new List<Availability>();
+    }
+
+    [HttpGet(Name = "GetAllDeliverySchedules")]
+    public IEnumerable<Availability> GetAllDeliverySchedules()
+    {
+        try
+        {
+            var input = new OrderRequestParams
+            {
+                PostalCode = "string",
+                ProductIds = new List<int> { 1 }
+            };
+
             var result = _scheduler.GetAvailableDeliveryDates(input);
 
             if (string.IsNullOrEmpty(result.errMessage))
